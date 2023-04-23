@@ -225,7 +225,6 @@ const getAllDirectoriesInDocumentsFolder = async () => {
 };
 
 
-getAllDirectoriesInDocumentsFolder();
 
 
 /**
@@ -323,4 +322,95 @@ const main = async () => {
     }
 };
 
-// main()
+
+/**
+ * Displays the directories as a tree in an MD file.
+ *
+ * @function
+ * @param {string} jsonFilePath - The path to the JSON file containing the directory metadata.
+ * @param {string} mdFilePath - The path to the MD file to save the directory tree to.
+ */
+const displayDirectoriesAsTree = (jsonFilePath, mdFilePath) => {
+    const jsonData = fs.readFileSync(jsonFilePath);
+    const directories = JSON.parse(jsonData);
+
+    const tree = buildTree(directories);
+    const md = convertTreeToMd(tree);
+
+    fs.writeFileSync(mdFilePath, md);
+};
+
+/**
+ * Builds a tree structure from the directory metadata.
+ *
+ * @function
+ * @param {Array<Object>} directories - The directory metadata to build the tree from.
+ * @returns {Object} The root node of the directory tree.
+ */
+const buildTree = (directories) => {
+    const root = { name: '', children: [] };
+    const map = {};
+
+    directories.forEach((directory) => {
+        if (directory.name.startsWith('.')) {
+            return;
+        }
+
+        if (directory.name === 'node_modules') {
+            return;
+        }
+
+        const parts = directory.relative_path.split(path.sep);
+        let currentNode = root;
+
+        parts.forEach((part) => {
+            if (!map[currentNode.name + part]) {
+                map[currentNode.name + part] = { name: part, children: [] };
+                currentNode.children.push(map[currentNode.name + part]);
+            }
+
+            currentNode = map[currentNode.name + part];
+        });
+    });
+
+    return root;
+};
+
+/**
+ * Converts a tree structure to an MD string.
+ *
+ * @function
+ * @param {Object} node - The root node of the directory tree.
+ * @param {number} depth - The depth of the current node in the tree.
+ * @returns {string} The MD string representing the directory tree.
+ */
+const convertTreeToMd = (node, depth = 0) => {
+    let md = '';
+
+    if (depth > 0) {
+        md += `${' '.repeat((depth - 1) * 2)}|-${node.name}\n`;
+    }
+
+    node.children.forEach((child) => {
+        md += convertTreeToMd(child, depth + 1);
+    });
+
+    return md;
+};
+
+
+const getJsonFilesInDataFolder = async () => {
+    const files = await fs.promises.readdir(DATA_FOLDER_PATH);
+    return files.filter((file) => file.endsWith('.json'))
+        .map((file) => path.join(DATA_FOLDER_PATH, file));
+};
+async function runner() {
+    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    const jsonFilePath = await getJsonFilesInDataFolder();
+    const mdFilePath = path.join(DATA_FOLDER_PATH, `directories_${timestamp}.md`);
+
+    await getAllDirectoriesInDocumentsFolder();
+    displayDirectoriesAsTree(jsonFilePath, mdFilePath);
+}
+
+runner()
