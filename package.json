@@ -1,0 +1,15 @@
+{
+  "name": "retrieve_directory_metadata",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "description": "--- title: README classification_Id: \"600\" created: 2023-04-23T07:39:10-04:00 updated: 2023-04-23T07:46:20-04:00 ---",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "@apexsoftwaresolutions/uuidv4": "^1.6.1"
+  }
+}
